@@ -1,6 +1,7 @@
 package za.co.tshepiso.energy.repository;
 
 import za.co.tshepiso.energy.model.EnergyReading;
+import za.co.tshepiso.energy.model.MunicipalitySummary;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -203,5 +204,54 @@ public class JdbcEnergyReadingRepository
         ) {
             return resultSet.getDouble("total_cost");
         }
+    }
+
+    @Override
+    public List<MunicipalitySummary> summarizeByMunicipality()
+            throws SQLException {
+
+        String sql = """
+            SELECT
+                municipality,
+                COUNT(*) AS reading_count,
+                SUM(usage_kwh) AS total_usage,
+                SUM(usage_kwh * cost_per_kwh) AS total_cost
+            FROM energy_reading
+            GROUP BY municipality
+            ORDER BY total_usage DESC
+            """;
+
+        List<MunicipalitySummary> summaries =
+                new ArrayList<>();
+
+        try (
+                Connection connection =
+                        DriverManager.getConnection(DATABASE_URL);
+                PreparedStatement statement =
+                        connection.prepareStatement(sql);
+                ResultSet resultSet = statement.executeQuery()
+        ) {
+            while (resultSet.next()) {
+                MunicipalitySummary summary =
+                        new MunicipalitySummary(
+                                resultSet.getString(
+                                        "municipality"
+                                ),
+                                resultSet.getInt(
+                                        "reading_count"
+                                ),
+                                resultSet.getDouble(
+                                        "total_usage"
+                                ),
+                                resultSet.getDouble(
+                                        "total_cost"
+                                )
+                        );
+
+                summaries.add(summary);
+            }
+        }
+
+        return summaries;
     }
 }

@@ -5,6 +5,8 @@ import za.co.tshepiso.energy.parser.CsvEnergyParser;
 import za.co.tshepiso.energy.repository.EnergyReadingRepository;
 import za.co.tshepiso.energy.repository.JdbcEnergyReadingRepository;
 import za.co.tshepiso.energy.validation.EnergyReadingValidator;
+import za.co.tshepiso.energy.model.MunicipalitySummary;
+import za.co.tshepiso.energy.report.CsvReportExporter;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -57,11 +59,12 @@ public class EnergyPipelineApp {
 
     private static void printReport(
             EnergyReadingRepository repository
-    ) throws SQLException {
+    ) throws SQLException, IOException {
 
         System.out.println();
         System.out.println("SA ENERGY DATA PIPELINE");
         System.out.println("=======================");
+
         System.out.println(
                 "Records in database: " +
                         repository.count()
@@ -78,8 +81,36 @@ public class EnergyPipelineApp {
         );
 
         System.out.println();
-        System.out.println("DATABASE RECORDS");
+        System.out.println("MUNICIPALITY SUMMARY");
+        System.out.println("--------------------");
 
-        repository.findAll().forEach(System.out::println);
+        List<MunicipalitySummary> summaries =
+                repository.summarizeByMunicipality();
+
+        for (MunicipalitySummary summary : summaries) {
+            System.out.printf(
+                    "%s: %d readings, %.2f kWh, R%.2f%n",
+                    summary.municipality(),
+                    summary.readingCount(),
+                    summary.totalUsageKwh(),
+                    summary.totalCost()
+            );
+        }
+
+        Path reportPath = Path.of(
+                "reports",
+                "municipality_summary.csv"
+        );
+
+        CsvReportExporter exporter =
+                new CsvReportExporter();
+
+        exporter.export(summaries, reportPath);
+
+        System.out.println();
+        System.out.println(
+                "CSV report created: " +
+                        reportPath.toAbsolutePath()
+        );
     }
 }
