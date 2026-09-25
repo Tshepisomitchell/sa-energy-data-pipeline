@@ -39,6 +39,9 @@ The application follows the ETL process:
 - Git and GitHub
 - IntelliJ IDEA
 
+## Demo Video
+https://youtu.be/qbi_2O-zdAQ
+
 ## Project structure
 
 ```text
