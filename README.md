@@ -42,6 +42,9 @@ The application follows the ETL process:
 ## Demo Video
 https://youtu.be/qbi_2O-zdAQ
 
+## Verification Code
+WTC-UL8MZPEC
+
 ## Project structure
 
 ```text
